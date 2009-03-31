@@ -181,6 +181,10 @@ blosxom starter kitはあらかじめいくつかのpluginやflavourを同梱し
 
 ■ 更新履歴
 
+2009/04/01 1.1.4
+
+  * XSS脆弱性(CVE-2008-2236)に対処した
+
 2005/02/23 1.1.3
 
   * writebackで生成されるa要素のrel属性の値に"nofollow"を指定するように
