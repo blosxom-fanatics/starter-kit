@@ -61,6 +61,23 @@ if ( $path_info[$#path_info] =~ /(.+)\.(.+)$/ ) {
   $flavour = param('flav') || $default_flavour;
 }
 
+# Fix XSS in flavour name (CVE-2008-2236)
+$flavour = blosxom_html_escape($flavour);
+
+sub blosxom_html_escape {
+  my $string = shift;
+  my %escape = (
+    '<' => '&lt;',
+    '>' => '&gt;',
+    '&' => '&amp;',
+    '"' => '&quot;',
+    "'" => '&apos;'
+  );
+  my $escape_re = join '|' => keys %escape;
+  $string =~ s/($escape_re)/$escape{$1}/g;
+  $string;
+}
+
 # Strip spurious slashes
 $path_info =~ s!(^/*)|(/*$)!!g;
 
