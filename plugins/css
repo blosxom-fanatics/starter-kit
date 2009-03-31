@@ -1,0 +1,26 @@
+# Blosxom Plugin: css
+# Author(s): Kyo Nagashima <kyo@hail2u.net>
+# Version: 1.0
+# Blosxom Home/Docs/Licensing: http://www.blosxom.com/
+
+package css;
+
+use strict;
+use vars qw($path);
+
+# --- Configurable variables -----------
+
+# --- Plug-in package variables --------
+
+my @paths = @blosxom::css_paths;
+
+# --------------------------------------
+
+sub start {
+	my $i = int(rand(int(@paths)));
+	$path = $paths[$i];
+
+  return 1;
+}
+
+1;

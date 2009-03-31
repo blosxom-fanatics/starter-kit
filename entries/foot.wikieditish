@@ -1,0 +1,102 @@
+<div class="comments-head">
+<a name="wikieditish"></a>
+Edit this entry...
+</div><!-- comments-head end -->
+
+<div class="comments-body">
+
+<p>wikieditish message: <em>$wikieditish::response</em></p>
+
+<form method="post" action="$url/$path_info#wikieditish">
+
+<input type="hidden" name="plugin" value="wikieditish" />
+
+<label for="title">Title:</label><br />
+<input type="text" name="title" size="48" value="$wikieditish::title" id="title" /><br /><br />
+
+<label for="body">Body:</label><br />
+<textarea name="body" rows="16" cols="64" id="body">$wikieditish::body</textarea><br /><br />
+
+<label for="excerpt">Excerpt:</label><br />
+<textarea name="excerpt" rows="4" cols="64" id="excerpt">$wikieditish::plain_body</textarea><br /><br />
+
+<label for="ping_url">Ping URLs:</label><br />
+<textarea name="ping_url" rows="4" cols="64" id="ping_url">$bookmarklet::ping_url</textarea><br /><br />
+
+<label for="password">Password:</label><br />
+<input type="password" name="password" size="16" value="$wikieditish::pref_password" id="password" /><br /><br />
+
+<input type="button" value="&nbsp;Preview&nbsp;" onclick="doPreview()" />
+<input type="submit" name="post" value="&nbsp;Save&nbsp;" style="font-weight:bold;" />
+
+</form>
+
+</div><!-- comments-body end -->
+
+<div class="blogbody" id="preview">
+
+<p>A quick preview will be rendered here when you click &quot;Preview&quot; button.</p>
+
+</div><!-- blogbody end -->
+
+</div><!-- blog end -->
+
+</div><!-- content end -->
+
+<div id="links">
+
+<div class="sidetitle">
+Search
+</div><!-- sidetitle end -->
+
+<div class="side">
+
+<form method="get" action="$google::path">
+<label for="search">Search this site:</label><br />
+<input type="text" name="q" value="" class="edit" id="search" />
+<input type="hidden" name="key" value="$google::key" />
+<input style="font-weight:bold;" type="submit" value="go" />
+</form>
+
+</div><!-- side end -->
+
+<div class="sidetitle">
+Categories
+</div><!-- sidetitle end -->
+
+<div class="side">
+
+$categories::categories
+
+</div><!-- side end -->
+
+<div class="sidetitle">
+Archives
+</div><!-- sidetitle end -->
+
+<div class="side">
+
+$archives::archives
+
+</div><!-- side end -->
+
+<div class="syndicate">
+<a href="$url/index.rss">Syndicate this site (XML)</a>
+</div><!-- syndicate end -->
+
+<div class="powered">
+Powered by<br />
+<a href="http://www.blosxom.com">blosxom $version</a><br />
+<!-- delete if you wish: start -->
+and<br />
+modified by<br />
+<a href="http://hail2u.net/archives/bsk.html">blosxom starter kit</a><br />
+<!-- delete if you wish: end -->
+</div><!-- powered end -->
+
+</div><!-- links end -->
+
+<br clear="all" />
+
+</body>
+</html>

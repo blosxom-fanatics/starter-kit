@@ -1,0 +1,19 @@
+<div class="blogbody">
+
+<a name="$fn"></a>
+<h3 class="title">$title</h3>
+
+$body
+
+<div class="posted">
+
+Posted at <a href="$url$path/$fn.htm">$ti</a>
+in <a href="$url$path/index.$default_flavour">$categories::alias</a>
+| <a href="$url$path/$fn.htm#writebacks">WriteBacks ($writeback::count)</a>
+| <a href="#wikieditish">Edit</a>
+
+
+</div><!-- posted end -->
+
+</div><!-- blogbody end -->
+

@@ -1,0 +1,61 @@
+</div><!-- blog end -->
+
+</div><!-- content end -->
+
+<div id="links">
+
+<div class="sidetitle">
+Search
+</div><!-- sidetitle end -->
+
+<div class="side">
+
+<form method="get" action="$google::path">
+<label for="search">Search this site:</label><br />
+<input type="text" name="q" value="" class="edit" id="search" />
+<input type="hidden" name="key" value="$google::key" />
+<input style="font-weight:bold;" type="submit" value="go" />
+</form>
+
+</div><!-- side end -->
+
+<div class="sidetitle">
+Categories
+</div><!-- sidetitle end -->
+
+<div class="side">
+
+$categories::categories
+
+</div><!-- side end -->
+
+<div class="sidetitle">
+Archives
+</div><!-- sidetitle end -->
+
+<div class="side">
+
+$archives::archives
+
+</div><!-- side end -->
+
+<div class="syndicate">
+<a href="$url/index.rss">Syndicate this site (XML)</a>
+</div><!-- syndicate end -->
+
+<div class="powered">
+Powered by<br />
+<a href="http://www.blosxom.com">blosxom $version</a><br />
+<!-- delete if you wish: start -->
+and<br />
+modified by<br />
+<a href="http://hail2u.net/archives/bsk.html">blosxom starter kit</a><br />
+<!-- delete if you wish: end -->
+</div><!-- powered end -->
+
+</div><!-- links end -->
+
+<br clear="all" />
+
+</body>
+</html>

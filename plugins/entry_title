@@ -1,0 +1,43 @@
+# Blosxom Plugin: entry_title
+# Author(s): Kyo Nagashima <kyo@hail2u.net>
+# Version: 1.0
+# Blosxom Home/Docs/Licensing: http://www.blosxom.com/
+
+package entry_title;
+
+use strict;
+use vars qw($title);
+
+# --- Configurable variables -----------
+
+# --- Plug-in package variables --------
+
+my $title_sep = $blosxom::entry_title_title_sep;
+
+# --------------------------------------
+
+sub start {
+  return 1;
+}
+
+sub head {
+  my($p, $dir, $head) = @_;
+
+  if ($dir =~ m!(.*?)/?([\w-]+)\.([\w-]+)$! and $2 ne 'index') {
+    my $file = join('/', $blosxom::datadir, $1, "$2.txt");
+    my $fh = new FileHandle;
+
+    if (-f "$file" && $fh->open("< $file")) {
+      chomp($title = <$fh>);
+      $fh->close;
+    }
+  }
+
+  if (defined $title) {
+    $title = "$title_sep$title";
+  }
+
+  return 1;
+}
+
+1;

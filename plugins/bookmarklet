@@ -1,0 +1,144 @@
+# Blosxom Plugin: bookmarklet
+# Author(s): Tatsuhiko Miyagawa <miyagawa@bulknews.net> 
+
+# Changes:
+# 0.03	Mon Sep 22 00:39:14 JST 2003
+#	Added trackback discovery ($ping_url and $trackback_discovery) 
+# 0.02	Wed Aug 20 13:35:06 JST 2003
+#	Fixed bug $script is empty without bookmarklet parameter
+# 0.01 	Wed Aug 20 01:15:26 JST 2003
+# 	first release
+
+package bookmarklet;
+
+use strict;
+use vars qw($script $url $quote $title $trackback_discovery $ping_url);
+
+# --- Configurable variables -----------
+
+# --- Plug-in package variables --------
+
+$trackback_discovery = $blosxom::bookmarklet_trackback_discovery;
+
+# --------------------------------------
+
+use CGI qw(:standard);
+
+sub start {
+  $script = <<SCRIPT;
+javascript:path=prompt('New entry path? (e.g. /blosxom/plugins/bookmarklet)', '/');if(path.length > 2){d=document;t=d.selection?d.selection.createRange().text:window.getSelection();void(window.open('$blosxom::url'+path+'.wikieditish?bookmarklet=1&title='+encodeURIComponent(d.title)+'&url='+encodeURIComponent(d.location.href)+'&quote='+encodeURIComponent(t),'_blank',''))};
+SCRIPT
+  ;
+  return unless $blosxom::flavour eq 'wikieditish' && param('bookmarklet');
+  while (<DATA>) {
+    last if /^__END__/;
+    my($flavour, $comp, $text) = split ' ', $_, 3;
+    $text =~ s/\\n/\n/g;
+    $blosxom::template{$flavour}{$comp} = $text;
+  }
+
+    return 1;
+}
+
+sub foot {
+  my($pkg, $current_dir, $foot_ref) = @_;
+  $url   = escape(param('url'));
+  $quote = escape(param('quote'));
+  $title = escape(param('title'));
+  my $template = $blosxom::template->('', 'bookmarklet', $blosxom::flavour);
+  $wikieditish::body = $blosxom::interpolate->($template);
+  $ping_url = find_ping_url($url) if $trackback_discovery;
+}
+
+sub escape {
+  local $_ = shift;
+  my %escape = ('<'=>'&lt;', '>'=>'&gt;', '&'=>'&amp;', '"'=>'&quot;'); 
+  my $escape_re  = join '|' => keys %escape;
+  s/($escape_re)/$escape{$1}/g;
+  $_;
+}
+
+sub find_ping_url {
+  my $url = shift;
+  warn "finding trackback ping URL from $url";
+  require LWP::Simple;
+  my $html = LWP::Simple::get($url);
+
+  $url =~ s/#.*$//;
+  while ($html =~ m!(<rdf:RDF.*?</rdf:RDF>)!msg) {
+    my $rdf = $1;
+    my ($id) = ($rdf =~ m!dc:identifier="([^\"]+)"!);
+    next if $id ne $url;
+    my ($tb) = ($rdf =~ m!trackback:ping="([^\"]+)"!);
+    return $tb if defined $tb;
+  }
+
+  return undef;
+}
+
+1;
+__DATA__
+wikieditish bookmarklet <a href="$bookmarklet::url" title="$bookmarklet::title">$bookmarklet::title</a>\n<blockquote>$bookmarklet::quote</blockquote>\n
+__END__
+
+=head1 NAME
+
+Blosxom Plug-in: bookmarklet
+
+=head1 SYNOPSIS
+
+Purpose: Adds your web browser to help you "blog" about any site you
+find on the web. As you are visiting different web sites, when you
+access the "Bookmarket", it automatically opens a new entry with
+wikieditish flavour and inserts into the editing field a hypertext
+link for the site you are viewing.
+
+This plugin is a MT's bookmarklet counterpart in blosxom.
+
+=head1 REQUIREMENT
+
+This plugin requires wikieditish plugin installed.
+
+=head1 USAGE
+
+Add following chunk to your foot.wikieditish flavour:
+
+  <a href="$bookmarklet::script">POST to $blosxom::blog_title (Bookmarklet)</a>
+
+C<$bookmarklet::script> is a javascript chunk. Browser may warn you
+about script security, which you can ignore.
+
+Then surf around the web. When you find something interesting, drag
+the text and choose 'POST to [Your blogname]' from the
+bookmarks. You'll first be prompted about new entry's path.
+
+Filled-in template is defined as bookmarklet.wikieditish in
+bookmarklet plugin itself. Surely you can change as you like in your
+flavours.
+
+=head1 TRACKBACK AUTO DISCOVERY
+
+If plugin variable C<$trackback_discovery> is on (it's on by default),
+this plugin tries to find trackback ping URL from remote html. If
+found, URI is set to C<$bookmarklet::ping_url>. You can use this
+varibale in combination with trackback sending plugins like
+C<autotrack> like this:
+
+  meta-tb_ping: $bookmarklet::ping_url
+
+=head1 AUTHOR
+
+Tatsuhiko Miyagawa <miyagawa@bulknews.net>, http://shibuya.pm.org/
+
+=head1 BUGS
+
+Address bug reports and comments to the Blosxom mailing list 
+[http://www.yahoogroups.com/group/blosxom].
+
+=head1 LICENSE
+
+Copyright 2003, Tatsuhiko Miyagawa
+
+This program is licensed under the GPL or Perl Artistic License.
+
+=cut

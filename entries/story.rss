@@ -1,0 +1,10 @@
+	<item rdf:about="$url$path/$fn.htm">
+		<title>$rss10::title</title>
+		<link>$url$path/$fn.htm</link>
+		<description>$rss10::description</description>
+		<dc:subject>$categories::alias</dc:subject>
+		<dc:creator>$rss10::creator (mailto:$rss10::email)</dc:creator>
+		<dc:date>$yr-$mo_num-$da$rss10::T$ti$rss10::tz_offset</dc:date>
+		<content:encoded><![CDATA[$body]]></content:encoded>
+		<trackback:ping rdf:resource="$url$path/$fn.trackback"/>
+	</item>

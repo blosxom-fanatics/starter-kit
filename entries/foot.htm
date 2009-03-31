@@ -1,0 +1,107 @@
+<div class="comments-head">
+<a name="trackback_form"></a>
+TrackBack ping me at
+</div><!-- comments-head end -->
+
+<div class="comments-body">
+
+<div class="trackback-url">
+$url$path/$fn.$writeback::trackback_flavour
+</div><!-- trackback-url end -->
+
+</div><!-- comments-body end -->
+
+<div class="comments-head">
+<a name="comment_form"></a>
+Post a comment
+</div><!-- comments-head end -->
+
+<div class="comments-body">
+
+<p>writeback message: <em>$writeback::writeback_response</em></p>
+
+<form method="post" action="$url$path/$fn.htm">
+
+<input type="hidden" name="plugin" value="writeback" />
+
+<label for="name">Name:</label><br />
+<input id="name" name="name" value="$writeback::pref_name" /><br /><br />
+
+<label for="url">URL/E-Mail:</label><br />
+<input id="url" name="url" value="$writeback::pref_url" /><br /><br />
+
+<label for="title">Title:</label><br />
+<input id="title" name="title" value="" /><br /><br />
+
+<label for="comment">Comments:</label><br />
+<textarea id="comment" name="comment" rows="10" cols="50"></textarea><br /><br />
+
+<input type="checkbox" id="save_preferences" name="save_preferences" value="1" checked="checked" /><label for="save_preferences">Remember info?</label><br /><br />
+
+<input style="font-weight:bold;" type="submit" name="post" value="&nbsp;Post&nbsp;" />
+
+</form>
+
+</div><!-- comments-body end -->
+
+</div><!-- blog end -->
+
+</div><!-- content end -->
+
+<div id="links">
+
+<div class="sidetitle">
+Search
+</div><!-- sidetitle end -->
+
+<div class="side">
+
+<form method="get" action="$google::path">
+<label for="search">Search this site:</label><br />
+<input type="text" name="q" value="" class="edit" id="search" />
+<input type="hidden" name="key" value="$google::key" />
+<input style="font-weight:bold;" type="submit" value="go" />
+</form>
+
+</div><!-- side end -->
+
+<div class="sidetitle">
+Categories
+</div><!-- sidetitle end -->
+
+<div class="side">
+
+$categories::categories
+
+</div><!-- side end -->
+
+<div class="sidetitle">
+Archives
+</div><!-- sidetitle end -->
+
+<div class="side">
+
+$archives::archives
+
+</div><!-- side end -->
+
+<div class="syndicate">
+<a href="$url/index.rss">Syndicate this site (XML)</a>
+</div><!-- syndicate end -->
+
+<div class="powered">
+Powered by<br />
+<a href="http://www.blosxom.com">blosxom $version</a><br />
+<!-- delete if you wish: start -->
+and<br />
+modified by<br />
+<a href="http://hail2u.net/archives/bsk.html">blosxom starter kit</a><br />
+<!-- delete if you wish: end -->
+</div><!-- powered end -->
+
+</div><!-- links end -->
+
+<br clear="all" />
+
+</body>
+</html>

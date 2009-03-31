@@ -1,0 +1,24 @@
+# Blosxom Plugin: google
+# Author(s): Kyo Nagashima <kyo@hail2u.net>
+# Version: 1.0
+# Blosxom Home/Docs/Licensing: http://www.blosxom.com/
+
+package google;
+
+use strict;
+use vars qw($path $key);
+
+# --- Configurable variables -----------
+
+# --- Plug-in package variables --------
+
+$path = $blosxom::google_cgi_path;
+$key = $blosxom::google_keyword;
+
+# --------------------------------------
+
+sub start {
+  return 1;
+}
+
+1;

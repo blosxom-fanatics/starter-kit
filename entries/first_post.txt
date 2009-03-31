@@ -1,0 +1,33 @@
+最初のエントリ
+<p>このウェブログは<a href="http://www.blosxom.com/" title="blosxom :: the zen of blogging ::">blosxom</a>を「ウェブログっぽく」というコンセプトで簡単に導入できるようにした<a href="http://hail2u.net/archives/bsk.html" title="hail2u.net - Archives - blosxom starter kit">blosxom starter kit</a>で作成されています。</p>
+<p>エントリはこのように見えます。このエントリの実体ファイル($entries_dir/first_entry.txt)を参照すればわかるとおり、一行目がタイトルに、それ以降が本文になります。</p>
+<p>blosxomには、マークアップをしてくれるとか、&quot;&amp;&quot;や&quot;&lt;&quot;などを実体参照に変換してくれるなどといった優しい機能はありません。このエントリの実体ファイルのようにHTMLをきっちり書いてやらなければなりません。メンドウというデメリットもありますが、柔軟にエントリを書くことができるというメリットもあり、至らないと一概には切り捨てることはできないと思います。</p>
+<p>それはあくまでも基本的にはというだけの話で、マークアップを補助するプラグインなども存在します。Wikiライクなフォーマットでエントリファイルを書くことができるようになるプラグインなどもあったりします。</p>
+<p>デフォルトで導入されているプラグインは以下の通りです。</p>
+<dl>
+<dt>back_and_forth</dt>
+<dd>エントリ個別のページに、前後のエントリを辿るリンクを表示するプラグインです。</dd>
+<dt>archives</dt>
+<dd>年ごと及び月ごとのページへのリンク・メニューを表示するプラグインです。</dd>
+<dt>bookmarklet</dt>
+<dd>Bookmarkletでwikieditishプラグインを呼ぶ機能を提供するプラグインです。</dd>
+<dt>categories</dt>
+<dd>カテゴリごとのページへのリンク・メニューを表示するプラグインです。</dd>
+<dt>css</dt>
+<dd>外部CSSファイルのパスを指定するプラグインです。</dd>
+<dt>date_title</dt>
+<dd>年ごと及び月ごと、日ごとのページのタイトルに、年月日を追加して表示するプラグインです。</dd>
+<dt>entries_index</dt>
+<dd>エントリの日付けを作成日時で固定するプラグインです。</dd>
+<dt>entry_title</dt>
+<dd>エントリ個別のページのタイトルに、そのエントリのタイトルを追加して表示するプラグインです。</dd>
+<dt>google</dt>
+<dd>Googleを利用してサイト内検索を行うCGIを呼び出すためのパラメータを指定するプラグインです。</dd>
+<dt>rss10</dt>
+<dd>RSS 1.0を配信する機能を提供するプラグインです。</dd>
+<dt>wikieditish</dt>
+<dd>ブラウザ上でエントリの編集及び作成する機能を提供するプラグインです。</dd>
+<dt>writeback</dt>
+<dd>コメントを投稿する機能とTrackBackを受信する機能を提供するプラグインです。</dd>
+</dl>
+<p>blosxom starter kitで何かわからないことがある場合は、配布ページの<a href="http://hail2u.net/archives/bsk.html#faq" title="hail2u.net - Archives - blosxom starter kit">良くある質問</a>を参照した上、<a href="mailto:kyo&#64;hail2u.net" title="mailto:kyo&#64;hail2u.net">メール</a>や<a href="http://hail2u.net/blog/" title="hail2u.net - Weblog">Weblog</a>内のblosxom starter kit関連エントリへのコメント、<a href="http://hail2u.net/bbs/" title="hail2u.net - BBS">BBS</a>、<a href="http://www.freeml.com/info/blosxom@freeml.com" title="FreeML ML情報ページ [all about blosxom]">ML</a>などで気軽に聞いてください。</p>

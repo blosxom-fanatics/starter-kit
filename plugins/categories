@@ -1,0 +1,155 @@
+# Blosxom Plugin: categories
+# Author: Todd Larason <jtl@molehill.org>
+# Version: 0+1i
+# Blosxom Home/Docs/Licensing: http://www.raelity.org/blosxom
+
+package categories;
+
+# --- Configuration Variables ----------
+
+# --- Plug-in package variables --------
+
+my %children;
+my %stories;
+$categories = '';
+my $story_count_commulative = $blosxom::categories_story_count_commulative;
+my $output_format = $blosxom::categories_output_format;
+my $root_name = $blosxom::categories_root_name;
+my @prune_dirs = @blosxom::categories_prune_dirs;
+my %aliases = %blosxom::categories_aliases;
+my $sep = $blosxom::categories_sep;
+
+# --------------------------------------
+
+sub start {
+  return 1;
+}
+
+sub filter {
+  my ($pkg, $files) = @_;
+
+  foreach (keys %{$files}) {
+    my ($dir, $file) = m:(.*)/(.*):;
+    my $child;
+    $stories{$dir}++;
+
+    while ($dir ne $blosxom::datadir) {
+      ($dir, $child) = ($dir =~ m:(.*)/(.*):);
+      $stories{$dir}++ if $story_count_commulative;
+
+      if (!$seen{"$dir/$child"}++) {
+        push @{$children{$dir}}, $child;
+      }
+    }
+  }
+
+  $categories = report_root();
+}
+
+sub story {
+  my($pkg, $path, $fn, $story_ref, $title_ref, $body_ref) = @_;
+
+  $alias = '';
+  my @path = split(/\//, $path);
+
+  foreach (@path) {
+    next if !$_;
+    $_ = $aliases{$_} if $aliases{$_};
+    $alias .= qq!$sep$_!;
+  }
+
+  $alias =~ s!^$sep!!;
+  $alias = "n/a" if (!$alias);
+
+  return 1;
+}
+
+sub report_root {
+  my $results;
+
+  $results = report_categories_start();
+  $results .= report_dir_start('/', $root_name, $stories{$blosxom::datadir});
+
+  foreach (sort @{$children{$blosxom::datadir}}) {
+    $results .= report_dir('/', $_);
+  }
+
+  $results .= report_dir_end();
+  $results .= report_categories_end();
+
+  return $results;
+}
+
+sub report_categories_start {
+  return qq!<ul class="categories">\n! if $output_format eq 'ul';
+  return qq!categories_start\n!        if $output_format eq 'm4';
+  warn "Unrecognized output format: $output_format";
+  return '';
+}
+
+sub report_dir_start {
+  my ($fulldir, $thisdir, $numstories) = @_;
+
+  $numstories ||= 0;
+  $thisdir = $aliases{$thisdir} if $aliases{$thisdir};
+
+  return qq!<li><a href="$blosxom::url${fulldir}">$thisdir</a>! . qq! ($numstories)\n<ul>\n! if $output_format eq 'ul';
+  return qq!dir_start([[$fulldir]],[[$thisdir]],[[$numstories]])\n! if $output_format eq 'm4';
+  return '';
+}
+
+sub report_dir {
+  my ($parent, $dir) = @_;
+
+  my $results;
+  local $_;
+
+  if (!defined($children{"$blosxom::datadir$parent$dir"}) || is_prune_dir("$parent$dir")) {
+    $results = report_dir_leaf("$parent$dir/", "$dir", $stories{"$blosxom::datadir$parent$dir"});
+  } else {
+    $results = report_dir_start("$parent$dir/", "$dir", $stories{"$blosxom::datadir$parent$dir"});
+
+    foreach (sort @{$children{"$blosxom::datadir$parent$dir"}}) {
+      $results .= report_dir("$parent$dir/", $_);
+    }
+
+    $results .= report_dir_end();
+  }
+
+  return $results;
+}
+
+sub report_dir_leaf {
+  my ($fulldir, $thisdir, $numstories) = @_;
+
+  $numstories ||= 0;
+  $thisdir = $aliases{$thisdir} if $aliases{$thisdir};
+
+  return qq!<li><a href="$blosxom::url${fulldir}">$thisdir</a>! . qq! ($numstories)</li>\n! if $output_format eq 'ul';
+  return qq!dir_leaf([[$fulldir]],[[$thisdir]],[[$numstories]])\n! if $output_format eq 'm4';
+  return '';
+}
+
+sub report_dir_end {
+  return qq!</ul>\n</li>\n! if $output_format eq 'ul';
+  return qq!dir_end\n!      if $output_format eq 'm4';
+  return '';
+}
+
+sub report_categories_end {
+  return qq!</ul>\n!          if $output_format eq 'ul';
+  return qq!categories_end\n! if $output_format eq 'm4';
+  return '';
+}
+
+sub is_prune_dir {
+  my ($dir) = @_;
+
+  foreach (@prune_dirs) {
+    return 1 if $dir eq $_;
+  }
+
+  return 0;
+}
+
+1;

@@ -1,0 +1,4 @@
+<blockquote cite="$bookmarklet::url">
+<p class="quote-title"><a href="$bookmarklet::url">$bookmarklet::title</a></p>
+<p>$bookmarklet::quote</p>
+</blockquote>

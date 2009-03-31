@@ -1,0 +1,386 @@
+# Blosxom Plugin: wikieditish
+# Author(s): Rael Dornfest <rael@oreilly.com>
+# Version: 2003-05-29
+# Blosxom Home/Docs/Licensing: http://www.blosxom.com/
+
+package wikieditish;
+
+# --- Configurable variables -----------
+
+# --- Plug-in package variables --------
+
+$response = 'Ready to edit this entry.';
+($title, $body) = ('', '');
+my $preserve_lastmodified = $blosxom::wikieditish_preserve_lastmodified;
+my $require_password = $blosxom::wikieditish_require_password;
+my $blog_password = $blosxom::wikieditish_blog_password;
+my $restrict_by_ip = $blosxom::wikieditish_restrict_by_ip;
+my @ips = @blosxom::wikieditish_ips;
+my $file_extension = $blosxom::wikieditish_file_extension;
+my $send_pings = $blosxom::wikieditish_send_pings;
+my $tb_charset = $blosxom::wikieditish_tb_charset;
+
+# --------------------------------------
+
+use vars qw/$require_password/;
+
+use CGI qw/:standard/;
+use FileHandle;
+
+my $fh = new FileHandle;
+
+# Strip potentially confounding bits from user-configurable variables
+$file_extension =~ s!^\.!!;
+
+sub start {
+  # Only spring into action if POSTing to the wikieditish  plug-in
+  if ( request_method() eq 'POST' and param('plugin') eq 'wikieditish' ) {
+
+    my($path,$fn) = $blosxom::path_info =~ m!^(?:(.*)/)?(.*)\.$blosxom::flavour!;
+    $path =~ m!^/! or $path = "/$path";
+
+    ($title, $body) = (param('title'), param('body'));
+    $body =~ s/\r\n/\n/g;
+
+    # Something's fishy with the path
+    $path =~ /[^\/\w\-]/
+      and warn "blosxom : wikieditish plugin : something's fishy with the path, $path\n"
+      and $response = "$path seems to be strange; this entry has not been saved."
+        and return 1;
+
+    # password required, but not set
+    $require_password and !$blog_password
+      and warn "blosxom : wikieditish plugin : password required but is not yet set; trying to > $blosxom::datadir$path/$fn.file_extension\n"
+      and $response = "A password is required to edit this page but one has not yet been set; this entry has not been saved."
+        and return 1;
+
+    # password required, set, but not correctly supplied
+    $require_password and (!param('password') or (param('password') and param('password') ne $blog_password))
+      and warn "blosxom : wikieditish plugin : incorrect password supplied for > $blosxom::datadir$path/$fn.file_extension\n"
+      and $response = "Incorrect password; this entry has not been saved."
+        and return 1;
+
+    # restricted by ip
+    $restrict_by_ip and !grep(/^\Q$ENV{'REMOTE_ADDR'}\E$/, @ips)
+      and warn "blosxom : wikieditish plugin : incorrect IP address > $blosxom::datadir$path/$fn.file_extension\n"
+      and $response = "Incorrect IP address; this entry has not been saved."
+        and return 1;
+
+    # blosxom's $datadir is not writeable
+    !-w  $blosxom::datadir
+      and warn "blosxom : wikieditish plugin > \$blosxom::datadir, $blosxom::datadir, is not writable.\n"
+      and $response = "\$blosxom::datadir is not writable; this entry has not been saved."
+        and return 1;
+
+    # the destination directory for this blog entry does not yet exist
+    unless ( -d "$blosxom::datadir$path" and -w "$blosxom::datadir$path" ) {
+      warn "blosxom : wikieditish plugin : mkdir $blosxom::datadir$path\n";
+      foreach ( ('', split /\//, $path) ) {
+        $p .= "/$_";
+        $p =~ s!^/!!;
+        -d "$blosxom::datadir/$p" or mkdir "$blosxom::datadir/$p", 0755
+          or ( warn "blosxom : wikieditish plugin : couldn't mkdir $blosxom::datadir/$p." and return 1 );
+        chmod 0777, "$blosxom::datadir/$p";
+      }
+    }
+
+    # If file already exists, memorize the lastmodified date/time
+    my $mtime = (stat "$blosxom::datadir$path/$fn.$file_extension")[9];
+    $mtime = time if !$mtime;
+
+    # If file is writeable
+    if ( $fh->open("> $blosxom::datadir$path/$fn.$file_extension") ) {
+      print $fh join "\n", $title, $body;
+      $fh->close();
+      $response = "This entry has been saved successfully.";
+
+      # reset lastmodified date/time to memorized value (if possible)
+      $preserve_lastmodified
+        and utime(time, $mtime, "$blosxom::datadir$path/$fn.$file_extension")
+          ? $response .= "  Preserved last modified date/time."
+          : warn "blosxom : wikieditish plugin : couldn't reset lastmodified time on $blosxom::datadir$path/$fn.$file_extension.";
+
+    } else {
+      warn "couldn't > $blosxom::datadir$path/$fn.file_extension";
+      $response = "There was a problem saving this entry; this entry has not been saved.";
+    }
+
+    # send trackback pings
+    @pings = split /\r?\n/, param('ping_url');
+    $title = escape($title);
+    $body  = escape($body);
+  }
+
+  1;
+}
+
+sub story {
+  my($pkg, $path, $filename, $story_ref, $title_ref, $body_ref) = @_;
+
+  unless ( param('plugin') eq 'wikieditish' ) {
+    my @body;
+    ($title, @body) = split /\n/, $blosxom::raw;
+    $title = escape($title);
+    $body  = escape(join "\n", @body);
+  }
+
+  $plain_body = &strip_html($$body_ref);
+
+  # real pinging is done here
+  &send_pings($title_ref, $plain_body, $path, $filename, @pings) if ($send_pings and @pings);
+
+  1;
+}
+
+sub escape {
+  local $_ = shift;
+
+  my %escape = ('<'=>'&lt;', '>'=>'&gt;', '&'=>'&amp;', '"'=>'&quot;');
+  my $escape_re = join '|' => keys %escape;
+  s/($escape_re)/$escape{$1}/g;
+
+  $_;
+}
+
+sub send_pings {
+  my($title_ref, $plain_body, $path, $fn, @ping_urls) = @_;
+
+  require LWP::UserAgent;
+  require HTTP::Request::Common;
+
+  my $blog_name = &strip_html($blosxom::blog_title);
+  my $url       = "$blosxom::url$path/$fn.htm";
+  my $title     = &strip_html($$title_ref);
+  my $excerpt   = param('excerpt') || $plain_body;
+
+  my $ua = LWP::UserAgent->new(
+    agent   => "blosxom/v$blosxom::version",
+    timeout => 30,
+  );
+
+  for my $ping_url (@ping_urls) {
+    next unless $ping_url;
+    warn "pinging $ping_url";
+    my $req = HTTP::Request::Common::POST(
+      $ping_url, [
+        blog_name => $blog_name,
+        url       => $url,
+        title     => $title,
+        excerpt   => $excerpt,
+        charset   => $tb_charset,
+      ]
+    );
+    my $res = $ua->request($req);
+    # my $xml = $res->content;
+    # if ($xml =~ m!<error>1</error>!) { warn $xml; }
+  }
+}
+
+sub strip_html {
+  my $str = shift;
+
+  $str =~ s!\x0D|\x0A!!g;
+  $str =~ s!<.*?>!!gs;
+
+  return $str;
+}
+
+1;
+
+__END__
+
+=head1 NAME
+
+Blosxom Plug-in: wikieditish
+
+=head1 SYNOPSIS
+
+Edit a Blosxom blog wiki-style, from right in the browser.
+
+=head2 QUICK START
+
+Drop this wikieditish plug-in file into your plug-ins directory
+(whatever you set as $plugin_dir in blosxom.cgi).
+
+Wikieditish, being a well-behaved plug-in, won't do anything until you
+either set a password or turn off the password requirement
+(set $require_password = 0).
+
+Move the contents of the flavours folder included in this distribution
+into your Blosxom data directory (whatever you set as $datadir in blosxom.cgi).
+Don't move the folder itself, only the files it contains!  If you don't
+have the the sample flavours handy, you can download them from:
+
+http://www.raelity.org/apps/blosxom/downloads/plugins/wikieditish.zip
+
+Point your browser at one of your Blosxom entries, specifying the wikieditish
+flavour (e.g. http://localhost/cgi-bin/blosxom.cgi/path/to/a/post.wikieditish)
+
+Edit the entry, supply your password (if required -- the default), and hit the
+Save button to save your changes.
+
+You can just as easily create a new blog entry by pointing your browser at a
+non-existent filename, potentially on a non-existent path
+(e.g. http://localhost/cgi-bin/blosxom.cgi/foo/bar.wikieditish).  Give the entry
+a title and body, supply your password (again, if required), and hit the Save
+button.  The wikieditish plug-in will create a new blog entry for you on
+your specified path, creating the supplied path's directory structure for you
+on the fly if necessary.
+
+Enjoy!
+
+=back
+
+=head2 SAMPLE FLAVOUR TEMPLATES
+
+I've made sample flavour templates available to you to help with any
+learning curve this plug-in might require.
+
+Take a gander at the source HTML for:
+
+=item * head.wikieditish, a basic head template -- nothing special.
+
+=item * story.wikieditish, a basic story template -- nothing special.
+
+=item * foot.wikieditish, a basic foot template just about like any other.
+The big difference is the "edit this blog" form for editing the current
+blog entry or creating a fresh one.
+
+NOTE: The wikieditish plug-in requires the presence of a "plugin" form
+variable with the value set to "wikieditish"; this tells the plug-in
+that it should handle the incoming POSTing data rather than leaving it
+for another plug-in.
+
+=back
+
+=head2 FLAVOURING WIKIEDITISH
+
+While there's not much in the way of template variables and the sample
+foot.wikieditish provides about everything you'll need, here's a list of
+variables and their purposes for your reference:
+
+=item * $wikieditish::title and $wikieditish::body prepopulate the form with the values from the existing blog entry file.
+
+=item * $wikieditish::password is prepopulated with the password you just entered into and submitted in the "edit this blog" form or preferences stored in a 'wikieditish' cookie, if you've the cookie plug-in installed and enabled.
+
+=back
+
+=head2 INVITING CONTRIBUTIONS
+
+The wikieditish plug-in serves dual purposes: as a browser-based editor for
+your Blosxom blog and as a wiki-style community blog, allowing contributions
+by a particular group of bloggers (using a shared password) or passers-by
+(without need of a password -- true Wiki-style).
+
+If you'd like to invite contribution, you can assocate  an "edit" button with
+each entry like so:
+
+<a href="$url$path/$fn.wikieditish">edit this blog</a>
+
+HERE
+
+=head1 INSTALLATION
+
+Drop wikieditish into your plug-ins directory ($blosxom::plugin_dir).
+
+=head1 CONFIGURATION
+
+=head2 PRESERVING LAST MODIFIED DATE/TIME ON EDITED ENTRY
+
+The wikieditish plug-in can attempt to maintain the last modified date/time
+stamp on any blog entry you're editing.  Otherwise, editing an entry will
+cause it to rise to the top of your blog like so much cream.
+
+I say "attempt" since this doesn't work on every operating system
+(it doesn't do any harm, though).
+
+To turn this feature on -- it's off by default -- set the
+$preserve_lastmodified variable to 1.
+
+=head2 RESTRICTING BY PASSWORD
+
+By default, the wikieditish plug-in requires a password.  You'll need to
+set one before being able to edit anything.  Set the $blog_password
+configuration variable to anything you wish
+(e.g.  my $blog_password = 'abc123';).  Just be
+sure to use something you'll remember and other's won't guess.
+
+You can disable password-protection if you wish, allowing passers-by to
+contribute to your blog, Wiki-style.  Be sure this is something you want to
+do.  It has some possible security implications, anyone being able to write
+to your server's hard drive, post to your public-facing blog, and edit
+(read: alter, spindle, contort) any blog postings.  Those warning's out of
+the way, to turn off password-protection, set $require_password to 0.
+
+=head2 RESTRICTING BY IP
+
+You can alternatively decide to restrict editing to a particular IP address
+or addresses -- those in your office, for example, or the machine actually
+running Blosxom (127.0.0.1).
+
+To do so, set $restrict_by_ip to 1 (it's off, or 0, by default), and
+populate the @ips array with a list of approved IP addresses.  By default,
+this is set to "this machine", the machine running Blosxom; shorthand for
+"this machine" in IP-speak is 127.0.0.1.  The following example restricts
+editing to those coming from three IPs, including 127.0.0.1:
+
+  # Should editing this blog be restricted to a particular set of IPs?
+  # 0 = no (default), 1 = yes
+  $restrict_by_ip = 1;
+
+  # To what IPs should editing this blog be restricted?
+  @ips = qw/ 127.0.0.1 10.0.0.3 140.101.22.10/;
+
+Of course, you can use a combination of password-protection and IP
+restriction if you so wish.
+
+=head1 VERSION
+
+2003-05-29
+
+Version number is the date on which this version of the plug-in was created.
+
+=head1 AUTHOR
+
+Rael Dornfest  <rael@oreilly.com>, http://www.raelity.org/
+
+=head1 SEE ALSO
+
+The wikieditish plug-in plays nicely with the wikiwordish plug-in
+[http://www.raelity.org/apps/blosxom/plugins/text/wikiwordish.individual]
+for wiki-style linking action.  And for wiki-style markup, be sure to try the
+textile [http://www.raelity.org/apps/blosxom/plugins/text/textile.individual]
+or tiki [http://www.raelity.org/apps/blosxom/plugins/text/tiki.individual]
+plug-ins.
+
+Blosxom Home/Docs/Licensing: http://www.raelity.org/apps/blosxom/
+
+Blosxom Plugin Docs: http://www.raelity.org/apps/blosxom/plugin.shtml
+
+=head1 BUGS
+
+Address bug reports and comments to the Blosxom mailing list
+[http://www.yahoogroups.com/group/blosxom].
+
+=head1 LICENSE
+
+Blosxom and this Blosxom Plug-in
+Copyright 2003, Rael Dornfest
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.

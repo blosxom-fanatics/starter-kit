@@ -1,0 +1,38 @@
+# Blosxom Plugin: date_title
+# Author(s): Kyo Nagashima <kyo@hail2u.net>
+# Version: 1.0
+# Blosxom Home/Docs/Licensing: http://www.blosxom.com/
+
+package date_title;
+
+use strict;
+use vars qw($title);
+
+# --- Configurable variables -----------
+
+# --- Plug-in package variables --------
+
+my $title_sep = $blosxom::date_title_title_sep;
+my $date_sep = $blosxom::date_title_date_sep;
+
+# --------------------------------------
+
+sub start {
+  if (!$blosxom::path_info_yr) {
+    return 0;
+  }
+
+  return 1;
+}
+
+sub head {
+  my($pkg, $currentdir, $head_ref) = @_;
+
+  $title  = "$title_sep$blosxom::path_info_yr";
+  $title .= "$date_sep$blosxom::path_info_mo_num" if $blosxom::path_info_mo_num;
+  $title .= "$date_sep$blosxom::path_info_da" if $blosxom::path_info_da;
+
+  return 1;
+}
+
+1;

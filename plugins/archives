@@ -1,0 +1,57 @@
+# Blosxom Plugin: archives
+# Author: Brian Akins <bakins@web.turner.com>
+# Version: 0+5i
+# Blosxom Home/Docs/Licensing: http://www.blosxom.com/
+
+package archives;
+
+# --- Configurable Variables -----------
+
+# --- Plug-in package variables --------
+
+$archives     = '';
+my $reverse   = $blosxom::archives_reverse;
+my $indent    = $blosxom::archives_indent;
+my @monthname = @blosxom::archives_monthname;
+
+# --------------------------------------
+
+sub start {
+  return 1;
+}
+
+sub filter {
+  my ($pkg, $files) = @_;
+
+  my %archive;
+
+  foreach (keys %{$files}) {
+    my @date = localtime($files->{$_});
+    my $month = $date[4];
+    my $year  = $date[5] + 1900;
+
+    $archive{$year}{'count'}++;
+    $archive{$year}{$month}{'count'}++;
+  }
+
+  my $results = qq{<ul class="archives">\n};
+
+  foreach my $year(sort {$reverse?$b<=>$a:$a<=>$b} keys(%archive)) {
+    $results .= qq{$indent<li><a href="$blosxom::url/$year/">$year</a> ($archive{$year}{'count'})\n$indent$indent<ul>\n};
+    delete $archive{$year}{'count'};
+
+    # loop for each month found; one LI per month.
+    foreach my $month(sort {$reverse?$b<=>$a:$a<=>$b} keys(%{$archive{$year}})) {
+       my $mnum = sprintf("%02d", $month+1);
+       $results .= qq{$indent$indent$indent<li><a href="$blosxom::url/$year/$mnum/">$monthname[$month]</a> ($archive{$year}{$month}{'count'})</li>\n};
+    }
+
+    $results .= "$indent$indent</ul>\n$indent</li>\n";
+  }
+
+  $results .= "</ul>\n";
+        
+  $archives = $results;
+}
+
+1;

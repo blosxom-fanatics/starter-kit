@@ -1,0 +1,37 @@
+<div class="blogbody">
+
+<a name="$fn"></a>
+<h3 class="title">$title</h3>
+
+$body
+
+<div class="posted">
+
+Posted at <a href="$url$path/$fn.htm">$ti</a>
+in <a href="$url$path/index.$default_flavour">$categories::alias</a>
+| <a href="#writebacks">WriteBacks ($writeback::count)</a>
+| <a href="$url$path/$fn.wikieditish#wikieditish">Edit</a>
+
+</div><!-- posted end -->
+
+<!--
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:dc="http://purl.org/dc/elements/1.1/"
+  xmlns:trackback="http://madskills.com/public/xml/rss/module/trackback/">
+  <rdf:Description
+    rdf:about="$url$path/$fn.htm"
+    dc:identifier="$url$path/$fn.htm"
+    dc:title="$title"
+    trackback:ping="$url$path/$fn.trackback"/>
+</rdf:RDF>
+-->
+
+</div><!-- blogbody end -->
+
+<div class="comments-head">
+<a name="writebacks"></a>
+WriteBacks
+</div><!-- comments-head end -->
+
+$writeback::writebacks
+
